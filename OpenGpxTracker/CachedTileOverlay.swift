@@ -10,15 +10,21 @@ import Foundation
 import MapKit
 import Cache
 
-/**
- * Overwrites the default overlay to store downloaded images
- */
-
+///
+/// Overwrites the default overlay to store downloaded images
+///
 class CachedTileOverlay : MKTileOverlay {
-    let operationQueue = OperationQueue()
-    var useCache: Bool = true
     
-   override func url(forTilePath path: MKTileOverlayPath) -> URL {
+    /// Tells loadTile method if the tile shall be loaded rom the app cache.
+    var useCache: Bool = true
+   
+    ///
+    /// Generates the URL for the tile to be requested.
+    /// It replaces the values of {z},{x} and {y} in the urlTemplate defined in GPXTileServer
+    ///
+    /// -SeeAlso: GPXTileServer
+    ///
+    override func url(forTilePath path: MKTileOverlayPath) -> URL {
         //print("CachedTileOverlay:: url() urlTemplate: \(urlTemplate)")
         var urlString = urlTemplate?.replacingOccurrences(of: "{z}", with: String(path.z))
         urlString = urlString?.replacingOccurrences(of: "{x}", with: String(path.x))
@@ -26,14 +32,19 @@ class CachedTileOverlay : MKTileOverlay {
     
         //get random subdomain
         let subdomains = "abc"
-        let rand = arc4random_uniform(UInt32(subdomains.characters.count))
+        let rand = arc4random_uniform(UInt32(subdomains.count))
         let randIndex = subdomains.index(subdomains.startIndex, offsetBy: String.IndexDistance(rand));
         urlString = urlString?.replacingOccurrences(of: "{s}", with:String(subdomains[randIndex]))
-        //print("CachedTileOverlay:: url() urlString: \(urlString)")
+        print("CachedTileOverlay:: url() urlString: \(urlString ?? "nil")")
         return URL(string: urlString!)!
     }
 
-    
+    ///
+    /// Loads the tile from the network or from cache
+    ///
+    /// If the internal app cache is activated,it tries to get the tile from it.
+    /// If not, it uses the default system cache (managed by the OS).
+    ///
     override func loadTile(at path: MKTileOverlayPath,
                            result: @escaping (Data?, Error?) -> Void) {
         let url = self.url(forTilePath: path)
@@ -71,15 +82,15 @@ class CachedTileOverlay : MKTileOverlay {
             transformer: TransformerFactory.forCodable(ofType: Data.self) // Storage<User>
         )
         let cacheKey = "\(self.urlTemplate ?? "none")-\(path.x)-\(path.y)-\(path.z)"
-        print("CachedTileOverlay::loadTile cacheKey = \(cacheKey)")
+        //print("CachedTileOverlay::loadTile cacheKey = \(cacheKey)")
         cache?.async.object(forKey: cacheKey) { object in
             switch object {
             case .value(let cached):
-                print("Object found in cache!!!!")
+                //print("Object found in cache!!!!")
                 result(cached,nil)
             case .error:
-                print("CachedTileOverlay:LoadTile. Error no such object")
-                print("Requesting data....");
+                //print("CachedTileOverlay:LoadTile. Error no such object")
+                //print("Requesting data....");
                 let task = URLSession.shared.dataTask(with: url) { data, response, error in
                     if let error = error {
                         result(nil,error)
@@ -95,9 +106,7 @@ class CachedTileOverlay : MKTileOverlay {
                     //let data = data
                     //save data in cache
                     cache?.async.setObject(data!, forKey: cacheKey) { error in
-                        if error == nil {
-                            print("ERROR saving in cache: \(error)")
-                        }
+                        print("ERROR saving in cache: \(error)")
                     }
                     DispatchQueue.main.async {
                         result(data, nil)

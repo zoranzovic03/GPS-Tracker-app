@@ -3,22 +3,25 @@
 //  OpenGpxTracker
 //
 //  Created by merlos on 20/09/14.
-//  Copyright (c) 2014 TransitBox. All rights reserved.
 //
 
 
 import Foundation
 import UIKit
 import MapKit
+import CoreGPX
 
-
+/// Extends the GPXTrackPoint to be able to be initialized with a `CLLocation` object.
 extension GPXTrackPoint {
 
+    /// Initializes a trackpoint with the CLLocation data
     convenience init(location: CLLocation) {
         self.init()
-        self.latitude = CGFloat(location.coordinate.latitude)
-        self.longitude = CGFloat(location.coordinate.longitude)
+        self.latitude = location.coordinate.latitude
+        self.longitude = location.coordinate.longitude
         self.time = Date()
-        self.elevation = CGFloat(location.altitude)
-    }    
+        self.elevation = location.altitude
+    }
+    
+    
 }

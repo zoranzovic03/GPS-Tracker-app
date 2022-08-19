@@ -3,22 +3,26 @@
 //  OpenGpxTracker
 //
 //  Created by merlos on 16/09/14.
-//  Copyright (c) 2014 TransitBox. All rights reserved.
 //
 
 import Foundation
-import UIKit
 import MapKit
+import CoreGPX
 
+///
+/// Extends GPXWaypoint to support the MKAnnotation protocol. It allows to
+/// add the waypoint as a pin in the map
+///
 extension GPXWaypoint : MKAnnotation {
     
-
-    convenience init (coordinate: CLLocationCoordinate2D) {
-       
-        self.init(latitude: CGFloat(coordinate.latitude), longitude: CGFloat(coordinate.longitude))
+    ///
+    /// Inits the point with a coordinate
+    ///
+    convenience init (coordinate: CLLocationCoordinate2D) { 
+        self.init(latitude: coordinate.latitude, longitude: coordinate.longitude)
         //set default title and subtitle
-        // Default title now
         
+        // Default title now
         let timeFormat = DateFormatter()
         timeFormat.dateStyle = DateFormatter.Style.none
         timeFormat.timeStyle = DateFormatter.Style.medium
@@ -35,6 +39,13 @@ extension GPXWaypoint : MKAnnotation {
         self.subtitle = subtitleFormat.string(from: now)
     }
     
+    convenience init (coordinate: CLLocationCoordinate2D, altitude: CLLocationDistance?) {
+        self.init(coordinate: coordinate)
+        self.elevation = altitude
+    }
+    
+    /// Title displayed on the annotation bubble.
+    /// Is the attribute name of the waypoint.
     public var title: String? {
         set {
             self.name = newValue
@@ -44,6 +55,8 @@ extension GPXWaypoint : MKAnnotation {
         }
     }
     
+    /// Subtitle displayed on the annotation bubble
+    /// Description of the GPXWaypoint.
     public var subtitle: String? {
         set {
             self.desc = newValue
@@ -53,13 +66,14 @@ extension GPXWaypoint : MKAnnotation {
         }
     }
     
+    ///Annotation coordinates. Returns/Sets the waypoint latitude and longitudes.
     public var coordinate: CLLocationCoordinate2D {
         set {
-            self.latitude = CGFloat(newValue.latitude)
-            self.longitude = CGFloat(newValue.longitude)
+            self.latitude = newValue.latitude
+            self.longitude = newValue.longitude
         }
         get {
-            return CLLocationCoordinate2D(latitude: CLLocationDegrees(self.latitude), longitude: CLLocationDegrees(self.longitude))
+            return CLLocationCoordinate2D(latitude: self.latitude!, longitude: CLLocationDegrees(self.longitude!))
         }
     }    
 }
